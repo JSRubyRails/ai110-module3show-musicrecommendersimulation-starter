@@ -29,13 +29,25 @@ Some prompts to answer:
 
 You can include a simple diagram or bullet list if helpful.
 
-- Diffetent songs are attributed with different genres (pop, Lofi, rock, jazz, etc.) and moods (happy, chill intense, relaxed, etc.). Energy, valence, danceability, acousticness, and tempo_bpm capture audio characteristics within the range of 0-1 (except tempo_bpm). 
+- Songs have a genre (pop, lofi, rock, jazz, etc.) and mood (happy, chill, intense, relaxed, etc.). Audio characteristics like energy, valence, danceability, acousticness, and tempo_bpm capture what the song sounds like, most on a 0–1 scale.
 
-- The UserProfile stores four preference signals: favorite_genre, favorite_mood, target_energy (number between 0-1 representing how high-energy the music should be) and likes_acoustic (indicates if user prefers acoustic or electric-leaning sounds)
+- The UserProfile stores four preference signals: favorite_genre, favorite_mood, target_energy (0–1 representing how high-energy the music should be), and likes_acoustic (whether the user prefers acoustic or electric-leaning sounds).
 
-- The Recommender computes a score by combining a genre match (1 if the song's genre = the user's favorite, 0 otherwise), mood match (same concept as genre match), energy similarity (1 - abs(song.energy - user.target_energy)), and an acousticness match (same concept as genre and mood but you convert). Each component is multiplied by a certain weight (genre and mood weighted the most) and summed into a single score. 
+- The Recommender scores each song using an additive points recipe:
+  - 2.0 if the song's genre matches the user's favorite genre
+  - 1.0 if the song's mood matches the user's favorite mood
+  - 0.0-1.0 for energy similarity: `1.0 - abs(song.energy - user.target_energy)
+  - Maximum possible score: 4.0 (genre + mood + perfect energy match)
 
-- Each song is scored through 'Recommender' and sorted from highest to lowest. The top k songs (currently set to 5) are returned as the song recommendations. 
+- Each song is scored and sorted highest to lowest. The top k songs (currently set to 5) are returned as recommendations.
+
+**Potential biases to be aware of**
+- Genre dominance: Genre is worth 2x mood, so a song that matches genre but has the wrong mood will outscore a song with the right mood but wrong genre. Users with niche genre preferences may get poor recommendations if the catalog is small.
+- Cold catalog bias: If few songs in the CSV match a user's genre, the system is forced to recommend lower-scoring songs. The recommendations are only as good as what's in the data.
+- Energy is the only continuous signal: Tempo, valence, and danceability are ignored entirely, so two very different-feeling songs could receive identical scores.
+- Acoustic preference is not scored: The UserProfile stores "likes_acoustic" but the current recipe does not use it, meaning that signal is silently dropped.
+
+
 
 ---
 
