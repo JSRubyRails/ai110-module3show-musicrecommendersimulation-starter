@@ -46,19 +46,55 @@ class Recommender:
         return "Explanation placeholder"
 
 def load_songs(csv_path: str) -> List[Dict]:
+    """Reads a CSV file and returns a list of song dicts with typed numeric values."""
+    import csv
+
+    int_fields = {"id"}
+    float_fields = {"energy", "tempo_bpm", "valence", "danceability", "acousticness"}
+
+    songs = []
+    with open(csv_path, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            for field in int_fields:
+                row[field] = int(row[field])
+            for field in float_fields:
+                row[field] = float(row[field])
+            songs.append(dict(row))
+    return songs
+
+def score_song(user_prefs: Dict, song: Dict) -> float:
     """
-    Loads songs from a CSV file.
-    Required by src/main.py
+    Scores a single song against a user preference profile.
+    Recipe (max 4.0):
+      +2.0  genre match
+      +1.0  mood match
+      +0-1  energy similarity: 1.0 - abs(song.energy - target_energy)
     """
-    # TODO: Implement CSV loading logic
-    print(f"Loading songs from {csv_path}...")
-    return []
+    score = 0.0
+    if song["genre"] == user_prefs["favorite_genre"]:
+        score += 2.0
+    if song["mood"] == user_prefs["favorite_mood"]:
+        score += 1.0
+    score += 1.0 - abs(song["energy"] - user_prefs["target_energy"])
+    return score
 
 def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[Dict, float, str]]:
     """
     Functional implementation of the recommendation logic.
     Required by src/main.py
     """
-    # TODO: Implement scoring and ranking logic
-    # Expected return format: (song_dict, score, explanation)
-    return []
+    scored = [(song, score_song(user_prefs, song)) for song in songs]
+    scored.sort(key=lambda x: x[1], reverse=True)
+    results = []
+    for song, score in scored[:k]:
+        reasons = []
+        if song["genre"] == user_prefs["favorite_genre"]:
+            reasons.append("genre match (+2.0)")
+        if song["mood"] == user_prefs["favorite_mood"]:
+            reasons.append("mood match (+1.0)")
+        energy_points = 1.0 - abs(song["energy"] - user_prefs["target_energy"])
+        reasons.append(f"energy similarity +{energy_points:.2f} (song: {song['energy']}, target: {user_prefs['target_energy']})")
+        explanation = " | ".join(reasons)
+        results.append((song, score, explanation))
+    return results
