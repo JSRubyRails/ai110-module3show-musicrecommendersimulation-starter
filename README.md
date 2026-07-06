@@ -279,4 +279,4 @@ A few sentences about what you learned:
 
 5. ![alt text](fifth_edgecase.png)
 
-6. ![alt text](image.png)
+6. ![alt text](sixth_edgecase.png)
