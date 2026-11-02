@@ -89,7 +89,7 @@ How you checked whether the recommender behaved as expected.
 
 Prompts:  
 
-- Which user profiles you tested  
+- Which user profiles were tested  
 - What you looked for in the recommendations  
 - What surprised you  
 - Any simple tests or comparisons you ran  
