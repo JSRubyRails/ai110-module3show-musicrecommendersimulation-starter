@@ -1,5 +1,5 @@
 from typing import List, Dict, Tuple, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 
 @dataclass
 class Song:
@@ -38,12 +38,25 @@ class Recommender:
         self.songs = songs
 
     def recommend(self, user: UserProfile, k: int = 5) -> List[Song]:
-        # TODO: Implement recommendation logic
-        return self.songs[:k]
+        """Scores every song against the user profile and returns the top k."""
+        user_prefs = asdict(user)
+        song_dicts = [asdict(song) for song in self.songs]
+        ranked = recommend_songs(user_prefs, song_dicts, k=k)
+        return [Song(**song_dict) for song_dict, _score, _explanation in ranked]
 
     def explain_recommendation(self, user: UserProfile, song: Song) -> str:
-        # TODO: Implement explanation logic
-        return "Explanation placeholder"
+        """Returns a human-readable breakdown of where a song's points came from."""
+        user_prefs = asdict(user)
+        song_dict = asdict(song)
+        score = score_song(user_prefs, song_dict)
+        reasons = []
+        if song_dict["genre"] == user_prefs["favorite_genre"]:
+            reasons.append("genre match (+2.0)")
+        if song_dict["mood"] == user_prefs["favorite_mood"]:
+            reasons.append("mood match (+1.0)")
+        energy_points = 1.0 - abs(song_dict["energy"] - user_prefs["target_energy"])
+        reasons.append(f"energy similarity +{energy_points:.2f}")
+        return f"Score {score:.2f} / 4.00: " + " | ".join(reasons)
 
 def load_songs(csv_path: str) -> List[Dict]:
     """Reads a CSV file and returns a list of song dicts with typed numeric values."""

@@ -59,3 +59,34 @@ def test_explain_recommendation_returns_non_empty_string():
     explanation = rec.explain_recommendation(user, song)
     assert isinstance(explanation, str)
     assert explanation.strip() != ""
+
+
+def test_recommend_ranks_by_score_not_catalog_order():
+    # Put the lofi song first so the pop song can only win by actually scoring higher
+    rec = make_small_recommender()
+    rec.songs.reverse()
+    user = UserProfile(
+        favorite_genre="pop",
+        favorite_mood="happy",
+        target_energy=0.8,
+        likes_acoustic=False,
+    )
+    results = rec.recommend(user, k=2)
+
+    assert results[0].title == "Test Pop Track"
+    assert results[1].title == "Chill Lofi Loop"
+
+
+def test_explain_recommendation_names_matching_factors():
+    user = UserProfile(
+        favorite_genre="pop",
+        favorite_mood="happy",
+        target_energy=0.8,
+        likes_acoustic=False,
+    )
+    rec = make_small_recommender()
+    explanation = rec.explain_recommendation(user, rec.songs[0])
+
+    assert "genre match" in explanation
+    assert "mood match" in explanation
+    assert "4.00" in explanation
